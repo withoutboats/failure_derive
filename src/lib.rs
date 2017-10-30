@@ -7,8 +7,58 @@ extern crate syn;
 decl_derive!([Fail, attributes(fail, cause)] => fail_derive);
 
 fn fail_derive(s: synstructure::Structure) -> quote::Tokens {
-    let display_body = s.each_variant(|v| {
-        let msg = find_error_msg(&v.ast().attrs);
+    let cause_body = s.each_variant(|v| {
+        if let Some(cause) = v.bindings().iter().find(is_cause) {
+            quote!(return Some(#cause))
+        } else {
+            quote!(return None)
+        }
+    });
+
+    let bt_body = s.each_variant(|v| {
+        if let Some(bi) = v.bindings().iter().find(is_backtrace) {
+            quote!(return Some(#bi))
+        } else {
+            quote!(return None)
+        }
+    });
+
+    let fail = s.bound_impl("::failure::Fail", quote! {
+        #[allow(unreachable_code)]
+        fn cause(&self) -> Option<&::failure::Fail> {
+            match *self { #cause_body }
+            None
+        }
+
+        #[allow(unreachable_code)]
+        fn backtrace(&self) -> ::std::option::Option<&::failure::Backtrace> {
+            match *self { #bt_body }
+            None
+        }
+    });
+
+    let display = display_body(&s).map(|display_body| {
+        s.bound_impl("::std::fmt::Display", quote! {
+            #[allow(unreachable_code)]
+            fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+                match *self { #display_body }
+                write!(f, "An error has occurred.")
+            }
+        })
+    });
+
+    quote! {
+        #fail
+        #display
+    }
+}
+
+fn display_body(s: &synstructure::Structure) -> Option<quote::Tokens> {
+    let mut msgs = s.variants().iter().map(|v| find_error_msg(&v.ast().attrs));
+    if msgs.all(|msg| msg.is_none()) { return None; }
+
+    Some(s.each_variant(|v| {
+        let msg = find_error_msg(&v.ast().attrs).expect("All variants must have display attribute.");
         if msg.is_empty() {
             panic!("Expected at least one argument to fail attribute");
         }
@@ -44,68 +94,25 @@ fn fail_derive(s: synstructure::Structure) -> quote::Tokens {
         quote! {
             return write!(f, #s #(, #args)*)
         }
-    });
-
-    let cause_body = s.each_variant(|v| {
-        if let Some(cause) = v.bindings().iter().find(is_cause) {
-            quote!(return Some(#cause))
-        } else {
-            quote!(return None)
-        }
-    });
-
-    let bt_body = s.each_variant(|v| {
-        if let Some(bi) = v.bindings().iter().find(is_backtrace) {
-            quote!(return Some(#bi))
-        } else {
-            quote!(return None)
-        }
-    });
-
-    let display = s.bound_impl("::std::fmt::Display", quote! {
-        #[allow(unreachable_code)]
-        fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-            match *self { #display_body }
-            write!(f, "An error has occurred.")
-        }
-    });
-
-    let fail = s.bound_impl("::failure::Fail", quote! {
-        #[allow(unreachable_code)]
-        fn cause(&self) -> Option<&::failure::Fail> {
-            match *self { #cause_body }
-            None
-        }
-
-        #[allow(unreachable_code)]
-        fn backtrace(&self) -> ::std::option::Option<&::failure::Backtrace> {
-            match *self { #bt_body }
-            None
-        }
-    });
-
-    quote! {
-        #fail
-        #display
-    }
+    }))
 }
 
-fn find_error_msg(attrs: &[syn::Attribute]) -> &[syn::NestedMetaItem] {
+fn find_error_msg(attrs: &[syn::Attribute]) -> Option<&[syn::NestedMetaItem]> {
     let mut error_msg = None;
     for attr in attrs {
         if attr.name() == "fail" {
             if error_msg.is_some() {
-                panic!("Cannot have two error_msg attributes")
+                panic!("Cannot have two display attributes")
             } else {
                 if let syn::MetaItem::List(_, ref list)  = attr.value {
                     error_msg = Some(&list[..]);
                 } else {
-                    panic!("error_msg must take a list in parantheses")
+                    panic!("fail attribute must take a list in parantheses")
                 }
             }
         }
     }
-    error_msg.expect("Must have attribute error_msg")
+    error_msg
 }
 
 fn is_backtrace(bi: &&synstructure::BindingInfo) -> bool {
