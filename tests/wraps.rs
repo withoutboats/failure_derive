@@ -16,7 +16,7 @@ struct WrapError {
 fn wrap_error() {
     let inner = io::Error::from_raw_os_error(98);
     let err = WrapError { inner };
-    assert!(err.cause().and_then(|err| err.downcast::<io::Error>()).is_some());
+    assert!(err.cause().and_then(|err| err.downcast_ref::<io::Error>()).is_some());
 }
 
 #[derive(Fail, Debug)]
@@ -27,7 +27,7 @@ struct WrapTupleError(#[cause] io::Error);
 fn wrap_tuple_error() {
     let io_error = io::Error::from_raw_os_error(98);
     let err: WrapTupleError = WrapTupleError(io_error);
-    assert!(err.cause().and_then(|err| err.downcast::<io::Error>()).is_some());
+    assert!(err.cause().and_then(|err| err.downcast_ref::<io::Error>()).is_some());
 }
 
 #[derive(Fail, Debug)]
@@ -41,7 +41,7 @@ struct WrapBacktraceError {
 fn wrap_backtrace_error() {
     let inner = io::Error::from_raw_os_error(98);
     let err: WrapBacktraceError = WrapBacktraceError { inner, backtrace: Backtrace::new() };
-    assert!(err.cause().and_then(|err| err.downcast::<io::Error>()).is_some());
+    assert!(err.cause().and_then(|err| err.downcast_ref::<io::Error>()).is_some());
     assert!(err.backtrace().is_some());
 }
 
@@ -60,10 +60,10 @@ enum WrapEnumError {
 fn wrap_enum_error() {
     let io_error = io::Error::from_raw_os_error(98);
     let err: WrapEnumError = WrapEnumError::Io(io_error);
-    assert!(err.cause().and_then(|err| err.downcast::<io::Error>()).is_some());
+    assert!(err.cause().and_then(|err| err.downcast_ref::<io::Error>()).is_some());
     assert!(err.backtrace().is_none());
     let fmt_error = fmt::Error::default();
     let err: WrapEnumError = WrapEnumError::Fmt { inner: fmt_error, backtrace: Backtrace::new() };
-    assert!(err.cause().and_then(|err| err.downcast::<fmt::Error>()).is_some());
+    assert!(err.cause().and_then(|err| err.downcast_ref::<fmt::Error>()).is_some());
     assert!(err.backtrace().is_some());
 }
