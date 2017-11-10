@@ -1,6 +1,6 @@
-# derive-fail
+# failure_derive
 
-`derive-fail` is the derive macro for the [failure][failure] crate.
+`failure_derive` is the derive macro for the [failure][failure] crate.
 Documentation is located at https://boats.gitlab.io/failure
 
 ## License
