@@ -1,5 +1,5 @@
 extern crate failure;
-#[macro_use] extern crate derive_fail;
+#[macro_use] extern crate failure_derive;
 
 #[derive(Fail, Debug)]
 #[fail(display = "An error has occurred.")]

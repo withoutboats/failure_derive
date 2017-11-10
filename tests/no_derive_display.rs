@@ -1,5 +1,5 @@
 extern crate failure;
-#[macro_use] extern crate derive_fail;
+#[macro_use] extern crate failure_derive;
 
 use std::fmt::{self, Display};
 use failure::Fail;

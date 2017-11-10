@@ -1,6 +1,6 @@
 [package]
 authors = ["Without Boats <woboats@gmail.com>"]
-name = "failure-derive"
+name = "failure_derive"
 version = "0.1.0"
 
 [dependencies]
