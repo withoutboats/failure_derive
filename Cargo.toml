@@ -1,7 +1,12 @@
 [package]
 authors = ["Without Boats <woboats@gmail.com>"]
+description = "derives for the failure crate"
+license = "MIT OR Apache-2.0"
 name = "failure_derive"
-version = "0.1.0"
+repository = "https://github.com/withoutboats/failure_derive"
+homepage = "https://boats.gitlab.io/failure"
+documentation = "https://boats.gitlab.io/failure"
+version = "0.0.1"
 
 [dependencies]
 quote = "0.3.15"
