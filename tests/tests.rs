@@ -54,3 +54,21 @@ fn enum_error() {
     let s = format!("{}", EnumError::UnitVariant);
     assert_eq!(&s[..], "An error has occurred.");
 }
+
+#[derive(Fail, Debug)]
+enum RecursiveError {
+    #[fail(display = "Recursive: {}", _0)]
+    Some(#[cause] Box<RecursiveError>),
+    #[fail(display = "None")]
+    None
+}
+
+#[test]
+fn recursive_error() {
+    let s = format!("{}", RecursiveError::None);
+    assert_eq!(&s[..], "None");
+    let s = format!("{}", RecursiveError::Some(Box::new(RecursiveError::None)));
+    assert_eq!(&s[..], "Recursive: None");
+    let s = format!("{}", RecursiveError::Some(Box::new(RecursiveError::Some(Box::new(RecursiveError::None)))));
+    assert_eq!(&s[..], "Recursive: Recursive: None");
+}
