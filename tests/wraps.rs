@@ -9,7 +9,7 @@ use failure::{Backtrace, Fail};
 #[derive(Fail, Debug)]
 #[fail(display = "An error has occurred: {}", inner)]
 struct WrapError {
-    #[cause] inner: io::Error,
+    #[fail(cause)] inner: io::Error,
 }
 
 #[test]
@@ -21,7 +21,7 @@ fn wrap_error() {
 
 #[derive(Fail, Debug)]
 #[fail(display = "An error has occurred: {}", _0)]
-struct WrapTupleError(#[cause] io::Error);
+struct WrapTupleError(#[fail(cause)] io::Error);
 
 #[test]
 fn wrap_tuple_error() {
@@ -33,7 +33,7 @@ fn wrap_tuple_error() {
 #[derive(Fail, Debug)]
 #[fail(display = "An error has occurred: {}", inner)]
 struct WrapBacktraceError {
-    #[cause] inner: io::Error,
+    #[fail(cause)] inner: io::Error,
     backtrace: Backtrace,
 }
 
@@ -48,10 +48,10 @@ fn wrap_backtrace_error() {
 #[derive(Fail, Debug)]
 enum WrapEnumError {
     #[fail(display = "An error has occurred: {}", _0)]
-    Io(#[cause] io::Error),
+    Io(#[fail(cause)] io::Error),
     #[fail(display = "An error has occurred: {}", inner)]
     Fmt {
-        #[cause] inner: fmt::Error,
+        #[fail(cause)] inner: fmt::Error,
         backtrace: Backtrace,
     },
 }
