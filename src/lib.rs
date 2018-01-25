@@ -55,6 +55,38 @@ fn fail_derive(s: synstructure::Structure) -> quote::Tokens {
         }
     });
 
+    let name = &s.ast().ident;
+
+    #[cfg(feature = "std")]
+    let box_fail = quote! {
+        impl ::failure::Fail for Box<#name>
+            where #name: ::failure::Fail
+        {
+            fn cause(&self) -> ::std::option::Option<&::failure::Fail> {
+                (**self).cause()
+            }
+
+            fn backtrace(&self) -> ::std::option::Option<&::failure::Backtrace> {
+                (**self).backtrace()
+            }
+        }
+    };
+
+    #[cfg(not(feature = "std"))]
+    let box_fail = quote! {
+        impl ::failure::Fail for Box<#name>
+            where #name: ::failure::Fail
+        {
+            fn cause(&self) -> ::core::option::Option<&::failure::Fail> {
+                (**self).cause()
+            }
+
+            fn backtrace(&self) -> ::core::option::Option<&::failure::Backtrace> {
+                (**self).backtrace()
+            }
+        }
+    };
+
     #[cfg(feature = "std")]
     let display = display_body(&s).map(|display_body| {
         s.bound_impl("::std::fmt::Display", quote! {
@@ -79,6 +111,7 @@ fn fail_derive(s: synstructure::Structure) -> quote::Tokens {
 
     quote! {
         #fail
+        #box_fail
         #display
     }
 }
