@@ -26,7 +26,7 @@ fn fail_derive(s: synstructure::Structure) -> quote::Tokens {
     });
 
     #[cfg(feature = "std")]
-    let fail = s.bound_impl("::failure::Fail", quote! {
+    let fail = s.unbound_impl("::failure::Fail", quote! {
         #[allow(unreachable_code)]
         fn cause(&self) -> ::std::option::Option<&::failure::Fail> {
             match *self { #cause_body }
@@ -41,7 +41,7 @@ fn fail_derive(s: synstructure::Structure) -> quote::Tokens {
     });
 
     #[cfg(not(feature = "std"))]
-    let fail = s.bound_impl("::failure::Fail", quote! {
+    let fail = s.unbound_impl("::failure::Fail", quote! {
         #[allow(unreachable_code)]
         fn cause(&self) -> ::core::option::Option<&::failure::Fail> {
             match *self { #cause_body }
@@ -57,7 +57,7 @@ fn fail_derive(s: synstructure::Structure) -> quote::Tokens {
 
     #[cfg(feature = "std")]
     let display = display_body(&s).map(|display_body| {
-        s.bound_impl("::std::fmt::Display", quote! {
+        s.unbound_impl("::std::fmt::Display", quote! {
             #[allow(unreachable_code)]
             fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
                 match *self { #display_body }
@@ -68,7 +68,7 @@ fn fail_derive(s: synstructure::Structure) -> quote::Tokens {
 
     #[cfg(not(feature = "std"))]
     let display = display_body(&s).map(|display_body| {
-        s.bound_impl("::core::fmt::Display", quote! {
+        s.unbound_impl("::core::fmt::Display", quote! {
             #[allow(unreachable_code)]
             fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
                 match *self { #display_body }
